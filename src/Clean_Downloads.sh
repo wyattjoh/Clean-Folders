@@ -11,12 +11,12 @@ temp_tar="/tmp/download-clean-$$.tar.bz2"
 notemp_tar="$FOLDER/$DATE.tar.bz2"
 temp_files="/tmp/download-clean-$$.tempfiles"
 
-function growltxt() {
+growltxt() {
     echo "$@"
     hash growl 2>&- && growl -nosticky "$@"
 }
 
-function check_files() {
+check_files() {
 for file in $FROM
 do
 	[[ "$file" == "/Users/wyattjohnson/Downloads/Archives" ]] && continue
@@ -25,14 +25,14 @@ done
 [[ "$DEBUG" == "ON" ]] && echo "X = $X"
 }
 
-function folder_prereq() {
+folder_prereq() {
 for folder in $*
 do
   [[ ! -e "$folder" ]] && mkdir "$folder"
 done
 }
 
-function inventory() {
+inventory() {
  DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
  OLDIFS=$IFS
  IFS=$'\n'
@@ -44,11 +44,9 @@ function inventory() {
  IFS=$OLDIFS
 }
 
-function move_files() {
+move_files() {
 for file in $FROM
 do
-	#fEXT=$(echo "$file" |awk -F . '{print $NF}')
-	#[[ "$fEXT" == "part" ]] && echo "Part file $file" && continue
 	[[ "$file" == "/Users/wyattjohnson/Downloads/Archives" ]] && continue
 	[[ "$DEBUG" == "ON" ]] && echo $file
 	mv "$file" "$FOLDER"
@@ -89,9 +87,9 @@ trap 'rm $temp_inventory; rm $temp_tar; mv $temp_files/* $FOLDER/ &> /dev/null; 
 trap - INT TERM
 }
 
-function archive_old() {
+archive_old() {
 
-function append_tar() {
+append_tar() {
 TARFOLDER=$1
 TAR="$TARFOLDER/$(basename $TARFOLDER).tar"
 #printf $TAR"\n\n"
@@ -126,16 +124,9 @@ do
 done
 }
 
-#function archive_old() {
-
-#for files in 
-
-#}
-
-function normalrun() {
+normalrun() {
     check_files
-    growltxt "No Files To Copy!" && exit
-    #archive_old #NOT READY FOR PROD
+    [[ $X == 0 ]] && growltxt "No Files To Copy!" && exit
     #  File test sucessfull, at least one file exists...
     folder_prereq "$ARCHIVE" "$FOLDER"
     move_files
@@ -213,14 +204,4 @@ fi
 }
 
 lock_ini
-
-if [[ $# -gt 0 ]]; then
-
-for DATE in "$@"
-do
 normalrun
-done
-	
-else
-	normalrun
-fi

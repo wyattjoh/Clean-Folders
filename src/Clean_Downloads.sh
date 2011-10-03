@@ -1,9 +1,8 @@
 #!/bin/bash
 DATE="$(date +%Y%m%d)"
-#DATE="20110721"
-ARCHIVE="/Users/wyattjohnson/Downloads/Archives"
+ARCHIVE="$HOME/Downloads/Archives"
 FOLDER="$ARCHIVE/$DATE"
-FROM="/Users/wyattjohnson/Downloads/*"
+FROM="$HOME/Downloads/*"
 DEBUG=${1-"OFF"}
 X="0"
 temp_inventory="/tmp/download-clean-$$.inventory"
@@ -19,7 +18,7 @@ growltxt() {
 check_files() {
 for file in $FROM
 do
-	[[ "$file" == "/Users/wyattjohnson/Downloads/Archives" ]] && continue
+	[[ "$file" == "$ARCHIVE" ]] && continue
 	((X++))
 done
 [[ "$DEBUG" == "ON" ]] && echo "X = $X"
@@ -47,7 +46,7 @@ inventory() {
 move_files() {
 for file in $FROM
 do
-	[[ "$file" == "/Users/wyattjohnson/Downloads/Archives" ]] && continue
+	[[ "$file" == "$ARCHIVE" ]] && continue
 	[[ "$DEBUG" == "ON" ]] && echo $file
 	mv "$file" "$FOLDER"
 done

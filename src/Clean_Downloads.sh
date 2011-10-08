@@ -5,10 +5,11 @@ FOLDER="$ARCHIVE/$DATE"
 FROM="$HOME/Downloads/*"
 DEBUG=${1-"OFF"}
 X="0"
-temp_inventory="/tmp/download-clean-$$.inventory"
-temp_tar="/tmp/download-clean-$$.tar.bz2"
+temp_prefix="/tmp/download-clean"
+temp_inventory="${temp_prefix}-$$.inventory"
+temp_tar="${temp_prefix}-$$.tar.bz2"
 notemp_tar="$FOLDER/$DATE.tar.bz2"
-temp_files="/tmp/download-clean-$$.tempfiles"
+temp_files="${temp_prefix}-$$.tempfiles"
 
 growltxt() {
     echo "$@"

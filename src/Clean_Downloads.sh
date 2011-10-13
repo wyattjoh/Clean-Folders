@@ -44,6 +44,12 @@ inventory() {
  IFS=$OLDIFS
 }
 
+inventoryprint() {
+ DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
+ printf "File Listing of Backup Directory as of $DATESTAMP\n\n"
+ cat "$1"
+}
+
 move_files() {
 for file in $FROM
 do
@@ -53,7 +59,7 @@ do
 done
 
 trap 'rm $temp_inventory; rm $temp_tar; mv $temp_files/* $FOLDER/ &> /dev/null; rm -R $temp_files; exit;' INT TERM
-	inventory "$FOLDER/"* > $temp_inventory
+	#inventory "$FOLDER/"* > $temp_inventory
 	
 	#	Move files matching the "BZ2" to a temp folder
 	#	these files do not need to be re-archived
@@ -64,7 +70,11 @@ trap 'rm $temp_inventory; rm $temp_tar; mv $temp_files/* $FOLDER/ &> /dev/null; 
 	done
 	
 	#	Perform the tarring
-	tar cjf $temp_tar $FOLDER &> /dev/null
+	#tar cjf $temp_tar $FOLDER &> /dev/null
+	
+	local oldFOLDER="$(pwd)"; cd $FOLDER
+	tar cjfv $temp_tar * &> $temp_inventory
+	cd "$oldFOLDER"; unset oldFolder
 	
 	#	Kill all preexisting files existing in there
 	for file in "$FOLDER/"*
@@ -81,30 +91,13 @@ trap 'rm $temp_inventory; rm $temp_tar; mv $temp_files/* $FOLDER/ &> /dev/null; 
 	done
 	rm -R "$temp_files"
 	
-	cat $temp_inventory > $FOLDER/File_Listing.txt
+	inventoryprint $temp_inventory > $FOLDER/File_Listing.txt
 	rm $temp_inventory
 	mv $temp_tar $notemp_tar
 trap - INT TERM
 }
 
 archive_old() {
-
-append_tar() {
-TARFOLDER=$1
-TAR="$TARFOLDER/$(basename $TARFOLDER).tar"
-#printf $TAR"\n\n"
-for files in $1/*
-do
-  [[ "$TAR" == "$files"  ]] && continue
-  #echo $files
-  tar --update --file="$TAR" "$files"
-  
-  #printf "$files --> $TAR\n"
-
-  rm -R $files
-done
-}
-
 
 OLDESTDATE=$(($DATE-5))
 for folders in $ARCHIVE/*

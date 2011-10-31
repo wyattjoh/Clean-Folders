@@ -32,18 +32,6 @@ do
 done
 }
 
-inventory() {
- DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
- OLDIFS=$IFS
- IFS=$'\n'
- printf "File Listing of Backup Directory as of $DATESTAMP\n\n"
- for files in $(find $* -maxdepth 0); do
-	[[ -d "${files}" ]] && continue
-	echo -e "${files}"
- done
- IFS=$OLDIFS
-}
-
 inventoryprint() {
  DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
  printf "File Listing of Backup Directory as of $DATESTAMP\n\n"
@@ -59,7 +47,6 @@ do
 done
 
 trap 'rm $temp_inventory; rm $temp_tar; mv $temp_files/* $FOLDER/ &> /dev/null; rm -R $temp_files; exit;' INT TERM
-	#inventory "$FOLDER/"* > $temp_inventory
 	
 	#	Move files matching the "BZ2" to a temp folder
 	#	these files do not need to be re-archived
@@ -70,13 +57,11 @@ trap 'rm $temp_inventory; rm $temp_tar; mv $temp_files/* $FOLDER/ &> /dev/null; 
 	done
 	
 	#	Perform the tarring
-	#tar cjf $temp_tar $FOLDER &> /dev/null
-	
 	local oldFOLDER="$(pwd)"; cd $FOLDER
 	tar cjfv $temp_tar * &> $temp_inventory
 	cd "$oldFOLDER"; unset oldFolder
 	
-	#	Kill all preexisting files existing in there
+	#	rm all preexisting files existing in there
 	for file in "$FOLDER/"*
 	do
 		[[ "$DEBUG" == "ON" ]] && echo "$file" && continue
@@ -127,72 +112,32 @@ normalrun() {
 }
 
 lock_ini() {
-##################################################
-### Locking and Initialization  ##################
-##################################################
-
-# lock dirs/files
-LOCK=`basename $0`
-LOCK=${LOCK%.*}
-LOCKDIR="/tmp/${LOCK}-lock"
-PIDFILE="${LOCKDIR}/PID"
-
-# exit codes and text for them - additional features nobody needs :-)
-ENO_SUCCESS=0; ETXT[0]="SUCCESS"
-ENO_GENERAL=1; ETXT[1]="GENERAL"
-ENO_LOCKFAIL=2; ETXT[2]="LOCKFAIL"
-ENO_RECVSIG=3; ETXT[3]="RECVSIG"
-
-###
-### start locking attempt
-###
-
+LOCK=`basename $0`; LOCK=${LOCK%.*}; LOCKDIR="/tmp/${LOCK}-lock"; PIDFILE="${LOCKDIR}/PID"; ENO_SUCCESS=0; ETXT[0]="SUCCESS"; ENO_GENERAL=1; ETXT[1]="GENERAL"; ENO_LOCKFAIL=2; ETXT[2]="LOCKFAIL"; ENO_RECVSIG=3; ETXT[3]="RECVSIG";
 trap 'ECODE=$?; echo "[lockgen] Exit: ${ETXT[ECODE]}($ECODE)" >&2' 0
 echo -n "[lockgen] Locking: "
-
 if mkdir "${LOCKDIR}" &>/dev/null; then
-
-# lock succeeded, install signal handlers before storing the PID just in case 
-# storing the PID fails
-trap 'ECODE=$?;
-echo "[lockgen] Removing lock. Exit: ${ETXT[ECODE]}($ECODE)"
-rm -rf "${LOCKDIR}"' 0
-echo "$$" >"${PIDFILE}" 
-# the following handler will exit the script on receiving these signals
-# the trap on "0" (EXIT) from above will be triggered by this trap's "exit" command!
-trap 'echo "[lockgen] Killed by a signal." >&2
-exit ${ENO_RECVSIG}' 1 2 3 15
-echo "success, installed signal handlers [$LOCKDIR]"
-
-# sucessfull locking completed
-
-#   Execute based on options
-
-
+	trap 'ECODE=$?;
+	echo "[lockgen] Removing lock. Exit: ${ETXT[ECODE]}($ECODE)"
+	rm -rf "${LOCKDIR}"' 0
+	echo "$$" >"${PIDFILE}" 
+	trap 'echo "[lockgen] Killed by a signal." >&2
+	exit ${ENO_RECVSIG}' 1 2 3 15
+	echo "success, installed signal handlers [$LOCKDIR]"
+		#   LOCK SUCCESS PROCESS
 else
+	OTHERPID="$(cat "${PIDFILE}")"
+	if [ $? != 0 ]; then
+		echo "lock failed, PID ${OTHERPID} is active" >&2; exit ${ENO_LOCKFAIL}
+	fi
 
-# lock failed, now check if the other PID is alive
-OTHERPID="$(cat "${PIDFILE}")"
-
-# if cat wasn't able to read the file anymore, another instance probably is
-# about to remove the lock -- exit, we're *still* locked
-if [ $? != 0 ]; then
-echo "lock failed, PID ${OTHERPID} is active" >&2
-exit ${ENO_LOCKFAIL}
-fi
-
-if ! kill -0 $OTHERPID &>/dev/null; then
-# lock is stale, remove it and restart
-echo "removing stale lock of nonexistant PID ${OTHERPID}" >&2
-rm -rf "${LOCKDIR}"
-echo "[lockgen] restarting myself" >&2
-exec "$0" "$@"
-else
-# lock is valid and OTHERPID is active - exit, we're locked!
-echo "lock failed, PID ${OTHERPID} is active" >&2
-exit ${ENO_LOCKFAIL}
-fi
-
+	if ! kill -0 $OTHERPID &>/dev/null; then
+		echo "removing stale lock of nonexistant PID ${OTHERPID}" >&2
+		rm -rf "${LOCKDIR}"
+		echo "[lockgen] restarting myself" >&2; exec "$0" "$@"
+	else
+		echo "lock failed, PID ${OTHERPID} is active" >&2
+		exit ${ENO_LOCKFAIL}
+	fi
 fi
 }
 

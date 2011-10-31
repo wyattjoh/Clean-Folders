@@ -23,6 +23,7 @@ do
 	((X++))
 done
 [[ "$DEBUG" == "ON" ]] && echo "X = $X"
+[[ $X == 0 ]] && growltxt "No Files To Copy!" && exit
 }
 
 folder_prereq() {
@@ -82,29 +83,8 @@ trap 'rm $temp_inventory; rm $temp_tar; mv $temp_files/* $FOLDER/ &> /dev/null; 
 trap - INT TERM
 }
 
-archive_old() {
-
-OLDESTDATE=$(($DATE-5))
-for folders in $ARCHIVE/*
-do
-  [[ "$folders" == "$ARCHIVE/*" ]] && continue
-  [[ "$(basename $folders)" -gt "$OLDESTDATE" ]] && continue
-  [[ -e "$folders/$(basename $folders).tar" ]] && append_tar "$folders" && continue
-  tar -czhf "$folders/$(basename $folders).tar" "$folders"/*
-  for files in $folders/*
-  do
-    [[ "$files" == "$folders/$(basename $folders).tar" ]] && continue
-    #rm -R $files
-    echo $files
-  done
-
-  #echo "$folders/$(basename $folders).tar"
-done
-}
-
 normalrun() {
     check_files
-    [[ $X == 0 ]] && growltxt "No Files To Copy!" && exit
     #  File test sucessfull, at least one file exists...
     folder_prereq "$ARCHIVE" "$FOLDER"
     move_files

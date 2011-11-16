@@ -1,6 +1,7 @@
 #!/bin/bash
 DATE="$(date +%Y%m%d)"
 ARCHIVE="$HOME/Archives/Downloads"
+ARCHIVE_Save="$HOME/Downloads/Archives"
 FOLDER="$ARCHIVE/$DATE"
 FROM="$HOME/Downloads/*"
 DEBUG=${1-"OFF"}
@@ -42,7 +43,7 @@ inventoryprint() {
 move_files() {
 for file in $FROM
 do
-	[[ "$file" == "$ARCHIVE" ]] && continue
+	[[ "$file" == "$ARCHIVE_Save" ]] && continue
 	[[ "$DEBUG" == "ON" ]] && echo $file
 	mv "$file" "$FOLDER"
 done

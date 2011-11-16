@@ -1,6 +1,6 @@
 #!/bin/bash
 DATE="$(date +%Y%m%d)"
-ARCHIVE="$HOME/Downloads/Archives"
+ARCHIVE="$HOME/Archives/Downloads"
 FOLDER="$ARCHIVE/$DATE"
 FROM="$HOME/Downloads/*"
 DEBUG=${1-"OFF"}
@@ -29,7 +29,7 @@ done
 folder_prereq() {
 for folder in $*
 do
-  [[ ! -e "$folder" ]] && mkdir "$folder"
+  [[ ! -e "$folder" ]] && mkdir -p "$folder"
 done
 }
 

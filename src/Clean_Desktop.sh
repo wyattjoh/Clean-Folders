@@ -1,6 +1,6 @@
 #!/bin/bash
 DATE="$(date +%Y%m%d)"
-ARCHIVE="/Users/wyattjohnson/Dropbox/Computers/Macbook-OSX/Desktop"
+ARCHIVE="/Users/wyattjohnson/Dropbox/Backups/Computers/Macbook-OSX/Desktop"
 FOLDER="$ARCHIVE/$DATE"
 FROM="/Users/wyattjohnson/Desktop/*"
 DEBUG=${1-"OFF"}

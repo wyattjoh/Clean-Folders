@@ -17,6 +17,23 @@ growltxt() {
     hash growl 2>&- && growl -nosticky "$@"
 }
 
+get_path_exec() {
+	if ! check_exec "$1"; then
+		print_warning "$1 not found"
+		exit;
+	else
+		echo $(which $1)
+		return $S_EXT;
+	fi
+}
+
+execute_supress_stout() {
+	local commands="$@"
+	[[ "$DEBUG" == 1 ]] && eval $commands && return $S_EXT
+	[[ "$DEBUG" == 0 ]] && eval $commands 1> /dev/null && return $S_EXT
+	return $U_RES
+}
+
 check_files() {
 for file in $FROM
 do
@@ -59,8 +76,11 @@ trap 'rm $temp_inventory; rm $temp_tar; mv $temp_files/* $FOLDER/ &> /dev/null; 
 	done
 	
 	#	Perform the tarring
+	
+	local tar_exec=$(get_path_exec "tar")
+	
 	local oldFOLDER="$(pwd)"; cd $FOLDER
-	tar cjfv $temp_tar * &> $temp_inventory
+	$tar_exec cjfv $temp_tar * &>1 | tee -a $temp_inventory
 	cd "$oldFOLDER"; unset oldFolder
 	
 	#	rm all preexisting files existing in there
